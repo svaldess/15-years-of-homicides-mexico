@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <title>Homicides Race</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <!-- jQuery US CSS -->
+    <link rel="stylesheet" href="css/jquery-ui.min.css">
+    <link rel="stylesheet" href="css/jquery-ui.structure.min.css">
+    <link rel="stylesheet" href="css/jquery-ui.theme.min.css">
+    <!-- Custom styling -->
+    <link rel="stylesheet" href="css/style.css">
+  
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+  
+</head>
+
+<body>
+  <div class= "container">
+    <div class="row">
+      
+      <script>
+        // Feel free to change or delete any of the code you see in this editor!
+        var svg = d3.select("body").append("svg")
+          .attr("width", 960)
+          .attr("height", 600);
+        
+        var tickDuration = 300;
+        
+        var top_n = 8;
+        var height = 600;
+        var width = 960;
+        
+        const margin = {
+          top: 120,
+          right: 10,
+          bottom: 10,
+          left: 30
+        };
+      
+        let barPadding = (height-(margin.bottom+margin.top))/(top_n*5);
+          
+        let title = svg.append('text')
+        .attr('class', 'title')
+        .attr('x', margin.left)
+        .attr('y', 50)
+        .attr("text-anchor", "start")  
+        .attr("font-weight",function(d,i) {return i*550+550;})
+        .attr("font-family", function(d,i) {return i<5 ? "sans-serif" : "sans-serif"; })
+        .style("font-size", "30px") 
+        .style('fill', '#424242')
+        .html('15 años de violencia en México');
+      
+        let subTitle = svg.append("text")
+        .attr("class", "subTitle")
+        .attr('x', margin.left)
+        .attr("y", 80)
+        .attr("font-weight",function(d,i) {return i*550+550;})
+        .attr("font-family", function(d,i) {return i<5 ? "sans-serif" : "sans-serif"; })
+        .style("font-size", "17px") 
+        .style('fill', '#424242')
+        .html("Las ocho entidades con mayor número de homicidios por año (2004-2019)");
+      
+        /* 
+        let caption = svg.append('text')
+        .attr('class', 'caption')
+        .attr('x', width)
+        .attr('y', height-5)
+        .style('text-anchor', 'end')
+        .html('Source: Interbrand');
+        */
+        let year = 2004;
+        
+      d3.csv('./data.csv').then(function(data) {
+          
+          console.log(data);
+          
+          data.forEach(d => {
+            d.value = +d.value,
+            d.lastValue = +d  .lastValue,
+            d.rank = +d.rank,
+            d.year = +d.year
+            d.colour = d3.hsl(Math.random()*360,0.45,0.65);
+          });
+        
+        console.log(data);
+        
+        let yearSlice = data.filter(d => d.year == year && !isNaN(d.value))
+          .sort((a,b) => b.value - a.value)
+          .slice(0, top_n);
+      
+        yearSlice.forEach((d,i) => d.rank = i);
+        
+        console.log('yearSlice: ', yearSlice)
+      
+        let x = d3.scaleLinear()
+            .domain([0, d3.max(yearSlice, d => d.value)])
+            .range([margin.left, width-margin.right-65]);
+      
+        let y = d3.scaleLinear()
+            .domain([top_n, 0])
+            .range([height-margin.bottom, margin.top]);
+      
+        let xAxis = d3.axisTop()
+            .scale(x)
+            .ticks(width > 500 ? 5:2)
+            .tickSize(-(height-margin.top-margin.bottom))
+            .tickFormat(d => d3.format(',')(d));
+      
+        let yAxis = d3.axisLeft()
+            .scale(y)
+            //.tickFormat(d => d3.format(',')(d));
+
+        svg.append('g')
+          .attr('class', 'axis xAxis')
+          .attr('transform', `translate(0, ${margin.top})`)
+          //.selectAll(".tick line").attr("stroke","white")
+          .call(xAxis)
+          .select(".domain").attr("stroke","white")
+
+        svg.append('g')
+          .attr('class', 'yAxis')
+          .attr("transform", "translate(" + (margin.left) + ",0)")
+          .selectAll('.tick line')
+            .attr("stroke-dasharray", "0,2")
+          .call(yAxis)
+          .selectAll("text")
+            .style("stroke","white")
+          //.selectAll('.tick line')
+          //  .attr("stroke-dasharray", "0,2");
+          //.attr('stroke', 'white')
+          //.classed('origin', d => d == 0);
+      
+        svg.selectAll('rect.bar')
+            .data(yearSlice, d => d.name)
+            .enter()
+            .append('rect')
+            .attr('class', 'bar')
+            .attr('x', x(0)+1)
+            .attr('width', d => x(d.value)-x(0)-1)
+            .attr('y', d => y(d.rank)+5)
+            .attr('height', y(1)-y(0)-barPadding)
+            .style('fill', function(d){
+              if (d.name == "Estado de Mexico") return "#777bc7" //"#cab1c5"
+              else if (d.name == "Guerrero") return "#7798c7" //"#9baec8" // "#968fe3" //"#ffa8a8" 
+              else if (d.name == "Baja California") return  "#ebcc67" //"#f1dea0" //"#84dba1" //"#e33939" 
+              else if (d.name == "Ciudad de Mexico") return "#7bedc9"  //"#7cb7cf" //"#b5c9d1"
+              else if (d.name == "Oaxaca") return "#f0a560" //"#efbd8f"
+              else if (d.name == "Guanajuato") return "#eb5552" //"#e3a09e"
+              else if (d.name == "Michoacan") return "#81c261" //"#a6c59b"
+              else if (d.name == "Chihuahua") return "#b0514f" //"#e3a09e"
+              else if (d.name == "Sinaloa") return "#ba784e" //"#c0ada1"
+              else if (d.name == "Jalisco") return "#ff7a85" //"#f7c7cb" 
+              else if (d.name == "Veracruz") return "#5dc286" //"#91c7a7"
+              else if (d.name == "Puebla") return "#966dc9" //"#a991c7"
+              else if (d.name == "Durango") return "a8a8a8" // "#7fc0c9" //"#95c5cc"
+              else if (d.name == "Nuevo Leon") return "#7bede2" //"#b2ede7"
+              else if (d.name == "Tamaulipas") return "#f2eb79" //"#f1eca0"
+              else if (d.name == "Morelos") return "#799ac7" //"#9baec8"
+              else if (d.name == "Sonora") return "#c99569" //"#ccae95"
+              else return "#a8a8a8"; 
+            })
+            .style('opacity', 0.70);
+            //.style('fill', d => d.colour);
+          
+        svg.selectAll('text.label')
+            .data(yearSlice, d => d.name)
+            .enter()
+            .append('text')
+            .attr('class', 'label')
+            //.attr("font-size", "16px")
+            .attr('x', d => x(d.value)-8)
+            .attr('y', d => y(d.rank)+5+((y(1)-y(0))/2)+1)
+            .style('text-anchor', 'end')
+            .html(d => d.name);
+          
+        svg.selectAll('text.valueLabel')
+          .data(yearSlice, d => d.name)
+          .enter()
+          .append('text')
+          .attr('class', 'valueLabel')
+          .attr("font-size", "12px")
+          .attr('x', d => x(d.value)+5)
+          .attr('y', d => y(d.rank)+5+((y(1)-y(0))/2)+1)
+          .text(d => d3.format(',.0f')(d.lastValue));
+
+        let yearText = svg.append('text')
+          .attr('class', 'yearText')
+          .attr('x', width-50)
+          .attr('y', height-15)
+          .style('text-anchor', 'end')
+          .style('fill', '#a1a1a1')
+          .attr("font-size", "80px")
+          .html(~~year)
+          .call(halo, 50);
+        
+      let ticker = d3.interval(e => {
+          
+          yearSlice = data.filter(d => d.year == year && !isNaN(d.value))
+            .sort((a,b) => b.value - a.value)
+            .slice(0,top_n);
+
+          yearSlice.forEach((d,i) => d.rank = i);
+        
+          console.log('IntervalYear: ', yearSlice);
+          
+          x.domain([0, d3.max(yearSlice, d => d.value)]); 
+        
+          svg.select('.xAxis')
+            .transition()
+            .duration(tickDuration)
+            .ease(d3.easeLinear)
+            .call(xAxis)
+            .selectAll('.tick line')
+          //.attr("stroke-dasharray", "2,2");
+          .attr("stroke-width","0.6")
+          //.attr("stroke","white");
+        
+          let bars = svg.selectAll('.bar')
+            .data(yearSlice, d => d.name);
+        
+          bars
+            .enter()
+            .append('rect')
+            .attr('class', d => `bar ${d.name.replace(/\s/g,'_')}`)
+            .attr('x', x(0)+1)
+            .attr( 'width', d => x(d.value)-x(0)-1)
+            .attr('y', d => y(top_n+1)+5)
+            .attr('height', y(1)-y(0)-barPadding)
+            .style('fill', function(d){
+              if (d.name == "Estado de Mexico") return "#777bc7" //"#cab1c5"
+              else if (d.name == "Guerrero") return "#7798c7" //"#9baec8" // "#968fe3" //"#ffa8a8" 
+              else if (d.name == "Baja California") return  "#ebcc67" //"#f1dea0" //"#84dba1" //"#e33939" 
+              else if (d.name == "Ciudad de Mexico") return "#7bedc9" //"#7cb7cf" //"#b5c9d1"
+              else if (d.name == "Oaxaca") return "#f0a560" //"#efbd8f"
+              else if (d.name == "Guanajuato") return "#eb5552" //"#e0716e" //"#e3a09e"
+              else if (d.name == "Michoacan") return "#81c261" //"#a6c59b"
+              else if (d.name == "Chihuahua") return "#b0514f" //"#e3a09e"
+              else if (d.name == "Sinaloa") return "#ba784e" //"#c0ada1"
+              else if (d.name == "Jalisco") return "#ff7a85" //"#f7c7cb"  
+              else if (d.name == "Veracruz") return "#5dc286" //"#91c7a7"
+              else if (d.name == "Puebla") return "#966dc9" //"#a991c7"
+              else if (d.name == "Durango") return "a8a8a8" // "#7fc0c9" //"#95c5cc"
+              else if (d.name == "Nuevo Leon") return "#7bede2" //"#b2ede7"
+              else if (d.name == "Tamaulipas") return "#f2eb79" //"#f1eca0"
+              else if (d.name == "Morelos") return "#799ac7" //"#9baec8"
+              else if (d.name == "Sonora") return "#c99569" //"#ccae95"
+              else return "#a8a8a8";
+            })
+            .style('opacity', 0.70)
+            //.style('fill', d => d.colour)
+            //.style('fill', function(d){ return myColor(d)})
+            .transition()
+              .duration(tickDuration)
+              .ease(d3.easeLinear)
+              .attr('y', d => y(d.rank)+5);
+              
+          bars
+            .transition()
+              .duration(tickDuration)
+              .ease(d3.easeLinear)
+              .attr('width', d => x(d.value)-x(0)-1)
+              .attr('y', d => y(d.rank)+5);
+                
+          bars
+            .exit()
+            .transition()
+              .duration(tickDuration)
+              .ease(d3.easeLinear)
+              .attr('width', d => x(d.value)-x(0)-1)
+              .attr('y', d => y(top_n+1)+5)
+              .remove();
+
+          let labels = svg.selectAll('.label')
+              .data(yearSlice, d => d.name);
+        
+          labels
+            .enter()
+            .append('text')
+            .attr('class', 'label')
+            //.attr("font-size", "16px")
+            .attr('x', d => x(d.value)-8)
+            .attr('y', d => y(top_n+1)+5+((y(1)-y(0))/2))
+            .style('text-anchor', 'end')
+            .html(d => d.name)    
+            .transition()
+              .duration(tickDuration)
+              .ease(d3.easeLinear)
+              .attr('y', d => y(d.rank)+5+((y(1)-y(0))/2)+1);
+                
+        
+          labels
+              .transition()
+              .duration(tickDuration)
+                .ease(d3.easeLinear)
+                .attr('x', d => x(d.value)-8)
+                .attr('y', d => y(d.rank)+5+((y(1)-y(0))/2)+1);
+        
+          labels
+              .exit()
+              .transition()
+                .duration(tickDuration)
+                .ease(d3.easeLinear)
+                .attr('x', d => x(d.value)-8)
+                .attr('y', d => y(top_n+1)+5)
+                .remove(); 
+        
+          let valueLabels = svg.selectAll('.valueLabel').data(yearSlice, d => d.name);
+        
+          valueLabels
+              .enter()
+              .append('text')
+              .attr('class', 'valueLabel')
+              .attr('x', d => x(d.value)+5)
+              .attr('y', d => y(top_n+1)+5)
+              .text(d => d3.format(',.0f')(d.lastValue))
+              .transition()
+                .duration(tickDuration)
+                .ease(d3.easeLinear)
+                .attr('y', d => y(d.rank)+5+((y(1)-y(0))/2)+1)
+                .attr("font-size", "12px")
+                .attr("font-weight",function(d,i) {return i*550+550;});
+                
+          valueLabels
+              .transition()
+                .duration(tickDuration)
+                .ease(d3.easeLinear)
+                .attr('x', d => x(d.value)+5)
+                .attr('y', d => y(d.rank)+5+((y(1)-y(0))/2)+1)
+                .tween("text", function(d) {
+                  let i = d3.interpolateRound(d.lastValue, d.value);
+                  return function(t) {
+                    this.textContent = d3.format(',')(i(t));
+                  };
+                });
+          
+        
+          valueLabels
+            .exit()
+            .transition()
+              .duration(tickDuration)
+              .ease(d3.easeLinear)
+              .attr('x', d => x(d.value)+5)
+              .attr('y', d => y(top_n+1)+5)
+              .remove();
+        
+          yearText.html(~~year);
+        
+        if(year == 2019) ticker.stop();
+        year = d3.format('.1f')((+year) + 0.1);
+      },tickDuration);
+
+    });
+        
+    const halo = function(text, strokeWidth) {
+      text.select(function() { return this.parentNode.insertBefore(this.cloneNode(true), this); })
+        .style('fill', '#ffffff')
+        .style( 'stroke','#ffffff')
+        .style('stroke-width', strokeWidth)
+        .style('stroke-linejoin', 'round')
+        .style('opacity', 1);
+      
+    } 
+
+
+      
+      </script>
+    </div>  
+  </div>
+</body>
