@@ -1,4 +1,4 @@
-# Homicides in Mexico
+# Homicides in Mexico from 2004 to 2019
 ## #D3 #BarChartRace
 
 This visualization displays the top 8 states in Mexico with the largest number of homicides per year, between 2004 and 2019.
