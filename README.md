@@ -5,4 +5,6 @@ This animated visualization displays the top 8 states in Mexico with the largest
 The visualization was built with D3 library and JavaScript, and it is displayed in an HTML. Python 3.7.6 was used to process the dataset. 
 The data was extracted from Secretariado Ejecutivo del Sistema Nacional de Seguridad Pública. 
 
+Check out the animation at: https://svaldess.github.io/homicides_race_mexico/
+
 ![](homicides_race.png)
